@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AccountMasterController;
 use App\Http\Controllers\DailyExpenseController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -20,8 +22,15 @@ Route::get('/supplier-master', function () {
     return view('admin.supplier-master');
 });
 
-Route::get('/account-masters', function () {
-    return view('admin.account-masters');
+Route::get('/account-masters', [AccountMasterController::class, 'index'])->name('account-masters.index');
+Route::post('/account-masters', [AccountMasterController::class, 'store'])->name('account-masters.store');
+
+// Debug route to test store
+Route::post('/debug-store', function (Request $request) {
+    return response()->json([
+        'all' => $request->all(),
+        'files' => $request->files->all(),
+    ]);
 });
 
 Route::get('/partner-master', function () {
@@ -56,4 +65,14 @@ Route::get('/init-storage', function () {
     Artisan::call('storage:link');
 
     return 'Storage link created!';
+});
+
+// Temporary route to clear caches
+Route::get('/clear-cache', function () {
+    Artisan::call('view:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('config:clear');
+
+    return 'All caches cleared!';
 });

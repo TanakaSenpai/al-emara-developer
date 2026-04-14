@@ -7,6 +7,9 @@
 
     <!-- Tailwind CSS (Vite) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Fallback to CDN if Vite assets not built -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Google Fonts for Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

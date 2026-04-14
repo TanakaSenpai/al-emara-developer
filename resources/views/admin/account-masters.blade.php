@@ -13,8 +13,8 @@
 
     <!-- Form (Hidden by default) -->
     <div id="accountForm" class="hidden p-6 border-b border-gray-100">
-        <form action="#" method="POST" class="max-w-3xl space-y-6">
-            
+        <form action="{{ route('account-masters.store') }}" method="POST" class="max-w-3xl space-y-6">
+            @csrf
             <div class="flex flex-col md:flex-row md:items-start md:pt-2 gap-4">
                 <label class="md:w-56 text-sm font-medium text-gray-700 md:mt-1">Account Number <span class="text-red-500">*</span></label>
                 <div class="flex-1">
@@ -59,16 +59,17 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
+                @forelse($accounts as $account)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">ACC-001</td>
-                    <td class="px-6 py-4 text-gray-700">Main Account</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">50,000.00</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $account->account_number }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $account->description }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($account->balance_amount, 2) }}</td>
                 </tr>
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">ACC-002</td>
-                    <td class="px-6 py-4 text-gray-700">Petty Cash</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">10,000.00</td>
+                @empty
+                <tr>
+                    <td colspan="3" class="px-6 py-4 text-center text-gray-500">No accounts found. Click "Add Account" to create one.</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
