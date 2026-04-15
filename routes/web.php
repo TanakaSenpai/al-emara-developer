@@ -8,6 +8,7 @@ use App\Http\Controllers\ItemDepartureController;
 use App\Http\Controllers\ItemMasterController;
 use App\Http\Controllers\PartnerCollectionController;
 use App\Http\Controllers\PartnerMasterController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StockEntryController;
 use App\Http\Controllers\SupplierMasterController;
 use Illuminate\Http\Request;
@@ -18,9 +19,7 @@ Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
 
-Route::get('/', function () {
-    return view('admin.dashboard');
-});
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::get('/item-master', [ItemMasterController::class, 'index'])->name('item-master.index');
 Route::post('/item-master', [ItemMasterController::class, 'store'])->name('item-master.store');
