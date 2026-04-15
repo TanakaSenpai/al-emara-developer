@@ -23,14 +23,14 @@ class ItemMasterController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'item_name' => 'required|string|max:255|unique:item_masters,item_name',
             'purchase_rate' => 'required|numeric|min:0',
             'stock_balance' => 'required|numeric|min:0',
         ]);
 
         try {
-            ItemMaster::create($request->validated());
+            ItemMaster::create($validated);
 
             return redirect()->route('item-master.index')->with('success', 'Item created successfully!');
         } catch (\Exception $e) {
