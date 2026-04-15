@@ -7,7 +7,7 @@
 
     <!-- Tailwind CSS (Vite) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <!-- Fallback to CDN if Vite assets not built -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -27,14 +27,14 @@
     </style>
 </head>
 <body class="antialiased text-gray-800 flex h-screen overflow-hidden">
-    
+
     <!-- Sidebar -->
     <aside class="w-64 sidebar text-gray-300 flex flex-col h-full flex-shrink-0 transition-all duration-300 z-20">
         <!-- Logo Area -->
         <div class="h-14 flex items-center px-4 font-bold text-lg text-white border-b border-gray-700 bg-[#2b2e38]">
             Al Emara Developer
         </div>
-        
+
         <!-- Navigation -->
         <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1 custom-scrollbar">
             <a href="/" class="{{ request()->is('/') ? 'sidebar-item-active' : 'sidebar-item' }} flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors">
@@ -71,47 +71,59 @@
                 Partner Master
             </a>
         </nav>
-        
+
         <!-- User Profile -->
-        <div class="p-4 bg-[#23252d] flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-[#3eb27e] text-white flex items-center justify-center font-bold text-xs">
-                    F
+        <div class="p-4 bg-[#23252d]">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-[#3eb27e] text-white flex items-center justify-center font-bold text-xs">
+                        A
+                    </div>
+                    <span class="text-sm font-medium truncate w-24">Admin User</span>
                 </div>
-                <span class="text-sm font-medium truncate w-24">Fakhrul Islam</span>
-            </div>
-            <div class="flex gap-2">
-                <button class="text-gray-400 hover:text-white transition-colors"><i data-lucide="accessibility" class="w-4 h-4"></i></button>
-                <button class="text-gray-400 hover:text-white transition-colors relative">
-                    <i data-lucide="bell" class="w-4 h-4"></i>
-                </button>
+                <div class="flex gap-2">
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="text-gray-400 hover:text-red-400 transition-colors" title="Logout">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </aside>
 
     <!-- Main ContentWrapper -->
     <div class="flex-1 flex flex-col h-full bg-[#f8f9fa]">
-        
+
         <!-- Top Navbar -->
-        <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0 z-10">
-            <!-- Left Branding inside navbar (since sidebar pushes content) -->
-            <div class="flex items-center text-blue-500 font-medium">
-                <i data-lucide="layers" class="w-5 h-5 mr-2"></i>
-                <span class="text-gray-700 text-sm">Al Emara Developer</span>
+        <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-10">
+            <!-- Left: Page Title -->
+            <div class="flex items-center gap-3">
+                <button onclick="document.querySelector('aside').classList.toggle('-translate-x-full')" class="lg:hidden text-gray-500 hover:text-gray-700">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <h1 class="text-lg font-semibold text-gray-800">
+                    @if(request()->is('/')) Dashboard
+                    @elseif(request()->is('daily-expenses')) Daily Expenses
+                    @elseif(request()->is('stock-entry')) Stock Entry
+                    @elseif(request()->is('item-departures')) Item Departures
+                    @elseif(request()->is('item-master')) Item Master
+                    @elseif(request()->is('bill-payments')) Bill Payments
+                    @elseif(request()->is('budget-plan')) Budget Plan
+                    @elseif(request()->is('partner-collection')) Partner Collection
+                    @elseif(request()->is('supplier-master')) Supplier Master
+                    @elseif(request()->is('account-masters')) Account Masters
+                    @elseif(request()->is('partner-master')) Partner Master
+                    @else {{ ucwords(str_replace('-', ' ', request()->path())) }}
+                    @endif
+                </h1>
             </div>
-            
-            <!-- Center Icons -->
-            <div class="flex items-center gap-4 text-gray-400">
-                <button class="hover:text-blue-500 transition-colors border-b-2 border-blue-500 pb-1 -mb-1 text-blue-500"><i data-lucide="monitor" class="w-5 h-5"></i></button>
-                <button class="hover:text-gray-600 transition-colors"><i data-lucide="smartphone" class="w-5 h-5"></i></button>
-                <button class="hover:text-gray-600 transition-colors"><i data-lucide="tablet" class="w-5 h-5"></i></button>
-            </div>
-            
-            <!-- Right Links -->
-            <div class="flex items-center gap-6 text-sm text-gray-500">
-                <a href="#" class="text-blue-500 hover:underline">Subscription</a>
-                <a href="#" class="flex items-center hover:text-gray-700 transition-colors"><i data-lucide="pencil" class="w-4 h-4 mr-1"></i> Edit this application</a>
-                <a href="#" class="flex items-center hover:text-gray-700 transition-colors"><i data-lucide="help-circle" class="w-4 h-4 mr-1"></i> Help</a>
+
+            <!-- Right: Current Date -->
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                <span>{{ now()->format('M d, Y') }}</span>
             </div>
         </header>
 
@@ -147,7 +159,7 @@
 
             @yield('content')
         </main>
-        
+
     </div>
 
     <style>

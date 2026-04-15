@@ -15,11 +15,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+use App\Http\Controllers\LoginController;
 
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+Route::middleware(['auth.custom'])->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::get('/item-master', [ItemMasterController::class, 'index'])->name('item-master.index');
 Route::post('/item-master', [ItemMasterController::class, 'store'])->name('item-master.store');
@@ -88,6 +91,7 @@ Route::post('/item-departures', [ItemDepartureController::class, 'store'])->name
 Route::get('/item-departures/{itemDeparture}/edit', [ItemDepartureController::class, 'edit'])->name('item-departures.edit');
 Route::put('/item-departures/{itemDeparture}', [ItemDepartureController::class, 'update'])->name('item-departures.update');
 Route::delete('/item-departures/{itemDeparture}', [ItemDepartureController::class, 'destroy'])->name('item-departures.destroy');
+});
 
 // Temporary route to create storage symlink on cPanel
 Route::get('/init-storage', function () {
