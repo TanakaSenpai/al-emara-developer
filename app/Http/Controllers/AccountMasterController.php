@@ -10,7 +10,13 @@ class AccountMasterController extends Controller
 {
     public function index()
     {
-        $accounts = Account::orderBy('id', 'desc')->get();
+        try {
+            $accounts = Account::orderBy('id', 'desc')->get();
+        } catch (\Exception $e) {
+            Log::error('Error loading accounts: '.$e->getMessage());
+            $accounts = collect();
+            session()->now('error', 'Database Error: '.$e->getMessage());
+        }
 
         return view('admin.account-masters', compact('accounts'));
     }
@@ -20,7 +26,7 @@ class AccountMasterController extends Controller
         Log::info('Store request received', $request->all());
 
         $validated = $request->validate([
-            'account_number' => 'required|string|max:255|unique:accounts,account_number',
+            'account_number' => 'required|string|max:255|unique:account_masters,account_number',
             'description' => 'required|string|max:255',
             'balance_amount' => 'required|numeric|min:0',
         ]);

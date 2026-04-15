@@ -13,7 +13,8 @@
 
     <!-- Form (Hidden by default) -->
     <div id="budgetForm" class="hidden p-6 border-b border-gray-100">
-        <form action="#" method="POST" class="max-w-3xl space-y-6">
+        <form action="{{ route('budget-plan.store') }}" method="POST" class="max-w-3xl space-y-6">
+            @csrf
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Date -->
@@ -27,8 +28,9 @@
                     <label class="text-sm font-medium text-gray-700">Partner Master <span class="text-red-500">*</span></label>
                     <select name="partner_master" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 bg-white">
                         <option value="">-Select-</option>
-                        <option value="1">Partner A</option>
-                        <option value="2">Partner B</option>
+                        @foreach($partners as $partner)
+                            <option value="{{ $partner->partner_name }}">{{ $partner->partner_name }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -78,20 +80,19 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
+                @forelse($budgetPlans as $plan)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">2026-04-13</td>
-                    <td class="px-6 py-4 text-gray-700">Partner A</td>
-                    <td class="px-6 py-4 text-gray-700">Monthly budget allocation</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">10,000.00</td>
-                    <td class="px-6 py-4 text-gray-700">Q2 Budget</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $plan->date ? $plan->date->format('Y-m-d') : '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $plan->partner_master ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $plan->budget_details ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($plan->charge_amount, 2) }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $plan->notes ?? '-' }}</td>
                 </tr>
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">2026-04-01</td>
-                    <td class="px-6 py-4 text-gray-700">Partner B</td>
-                    <td class="px-6 py-4 text-gray-700">Project budget</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">25,000.00</td>
-                    <td class="px-6 py-4 text-gray-700">Annual budget</td>
+                @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No budget plans found. Click "Add Budget" to create one.</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

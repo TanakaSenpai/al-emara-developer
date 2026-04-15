@@ -13,7 +13,8 @@
 
     <!-- Form (Hidden by default) -->
     <div id="stockForm" class="hidden pb-20">
-        <form action="#" method="POST" class="max-w-6xl space-y-8 p-6">
+        <form action="{{ route('stock-entry.store') }}" method="POST" class="max-w-6xl space-y-8 p-6">
+            @csrf
             
             <!-- Top Section -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12 pb-6">
@@ -23,8 +24,9 @@
                     <div class="flex-1">
                         <select name="supplier_master" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 bg-white">
                             <option value="">-Select-</option>
-                            <option value="1">Supplier A</option>
-                            <option value="2">Supplier B</option>
+                            @foreach($suppliers as $supplier)
+                                <option value="{{ $supplier->supplier_name }}">{{ $supplier->supplier_name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -79,7 +81,9 @@
                                 <td>
                                     <select name="item_master[]" class="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-[#3eb27e] bg-white font-medium">
                                         <option value="">-Select-</option>
-                                        <option value="1">Item A</option>
+                                        @foreach($items as $item)
+                                            <option value="{{ $item->item_name }}">{{ $item->item_name }}</option>
+                                        @endforeach
                                     </select>
                                 </td>
                                 <td class="px-2">
@@ -154,20 +158,28 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
+                @forelse($stockEntries as $entry)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">2026-04-13</td>
-                    <td class="px-6 py-4 text-gray-700">Supplier A</td>
-                    <td class="px-6 py-4 text-gray-700">CH-001</td>
-                    <td class="px-6 py-4 text-gray-700">Item A (10), Item B (5)</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">1,500.00</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $entry->date ? $entry->date->format('Y-m-d') : '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $entry->supplier_master ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $entry->ref_party_chalan ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">
+                        @if($entry->details && $entry->details->count() > 0)
+                            @foreach($entry->details as $detail)
+                                {{ $detail->item_master }} ({{ number_format($detail->qnty, 2) }})
+                                @if(!$loop->last), @endif
+                            @endforeach
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($entry->sub_total, 2) }}</td>
                 </tr>
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">2026-04-11</td>
-                    <td class="px-6 py-4 text-gray-700">Supplier B</td>
-                    <td class="px-6 py-4 text-gray-700">CH-002</td>
-                    <td class="px-6 py-4 text-gray-700">Item C (20)</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">3,200.00</td>
+                @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No stock entries found. Click "Add Stock Entry" to create one.</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
@@ -222,11 +234,19 @@
             
             if(itemSelect) {
                 itemSelect.addEventListener('change', function() {
-                    if(this.value) {
-                        row.querySelector('input[name="old_stock[]"]').value = '15.00';
+                    const selectedItemName = this.value;
+                    const oldStockInput = row.querySelector('input[name="old_stock[]"]');
+
+                    if(selectedItemName) {
+                        // Find the item data from the $items collection
+                        @foreach($items as $item)
+                        if(selectedItemName === '{{ $item->item_name }}') {
+                            oldStockInput.value = '{{ number_format($item->stock_balance, 2) }}';
+                        }
+                        @endforeach
                         calculateRow(row);
                     } else {
-                        row.querySelector('input[name="old_stock[]"]').value = '';
+                        oldStockInput.value = '';
                         calculateRow(row);
                     }
                 });

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class DailyExpense extends Model
 {
+    protected $table = 'daily_expenses';
+
     protected $fillable = ['expense_date', 'expense_details', 'expense_amount', 'expense_by', 'voucher_no', 'account_id'];
 
     protected $casts = [

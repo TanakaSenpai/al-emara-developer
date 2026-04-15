@@ -13,7 +13,8 @@
 
     <!-- Form (Hidden by default) -->
     <div id="collectionForm" class="hidden p-6 border-b border-gray-100">
-        <form action="#" method="POST" class="max-w-4xl space-y-6">
+        <form action="{{ route('partner-collection.store') }}" method="POST" class="max-w-4xl space-y-6">
+            @csrf
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Date -->
@@ -27,8 +28,9 @@
                     <label class="text-sm font-medium text-gray-700">Partners <span class="text-red-500">*</span></label>
                     <select name="partners" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 bg-white">
                         <option value="">-Select-</option>
-                        <option value="1">Partner A</option>
-                        <option value="2">Partner B</option>
+                        @foreach($partners as $partner)
+                            <option value="{{ $partner->partner_name }}">{{ $partner->partner_name }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -37,8 +39,9 @@
                     <label class="text-sm font-medium text-gray-700">Budget Plan</label>
                     <select name="budget_plan" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 bg-white">
                         <option value="">-Select-</option>
-                        <option value="1">Plan Q1</option>
-                        <option value="2">Plan Q2</option>
+                        @foreach($budgetPlans as $plan)
+                            <option value="{{ $plan->budget_details }}">{{ $plan->budget_details }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -49,8 +52,9 @@
                     <label class="text-sm font-medium text-gray-700">Account Master <span class="text-red-500">*</span></label>
                     <select name="account_master" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 bg-white">
                         <option value="">-Select-</option>
-                        <option value="1">Main Account</option>
-                        <option value="2">Petty Cash</option>
+                        @foreach($accounts as $account)
+                            <option value="{{ $account->account_number }}">{{ $account->account_number }}</option>
+                        @endforeach
                     </select>
                 </div>
                 
@@ -115,26 +119,22 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
+                @forelse($collections as $collection)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">2026-04-13</td>
-                    <td class="px-6 py-4 text-gray-700">Partner A</td>
-                    <td class="px-6 py-4 text-gray-700">Plan Q1</td>
-                    <td class="px-6 py-4 text-gray-700">Main Account</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">5,000.00</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">0.00</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">5,000.00</td>
-                    <td class="px-6 py-4 text-gray-700">Monthly collection</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $collection->date ? $collection->date->format('Y-m-d') : '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $collection->partners ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $collection->budget_plan ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $collection->account_master ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($collection->net_amount, 2) }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($collection->extra_charges, 2) }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($collection->total_paid_amount, 2) }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $collection->notes ?? '-' }}</td>
                 </tr>
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">2026-04-10</td>
-                    <td class="px-6 py-4 text-gray-700">Partner B</td>
-                    <td class="px-6 py-4 text-gray-700">Plan Q2</td>
-                    <td class="px-6 py-4 text-gray-700">Petty Cash</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">3,000.00</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">100.00</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">3,100.00</td>
-                    <td class="px-6 py-4 text-gray-700">With extra charges</td>
+                @empty
+                <tr>
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">No partner collections found. Click "Add Collection" to create one.</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
@@ -145,5 +145,45 @@
         const form = document.getElementById('collectionForm');
         form.classList.toggle('hidden');
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const partnerSelect = document.querySelector('select[name="partners"]');
+        const totalDueBalanceInput = document.querySelector('input[name="total_due_balance"]');
+        const totalPaidAmountInput = document.querySelector('input[name="total_paid_amount"]');
+        const extraChargesInput = document.querySelector('input[name="extra_charges"]');
+        const netAmountInput = document.querySelector('input[name="net_amount"]');
+
+        // Load total due balance when partner is selected
+        if(partnerSelect && totalDueBalanceInput) {
+            partnerSelect.addEventListener('change', function() {
+                const selectedPartnerName = this.value;
+
+                if(selectedPartnerName) {
+                    // Find the partner data from the $partners collection
+                    @foreach($partners as $partner)
+                    if(selectedPartnerName === '{{ $partner->partner_name }}') {
+                        totalDueBalanceInput.value = '{{ number_format($partner->due_amount, 2) }}';
+                    }
+                    @endforeach
+                } else {
+                    totalDueBalanceInput.value = '';
+                }
+            });
+        }
+
+        // Calculate net amount when paid amount or extra charges change
+        function calculateNetAmount() {
+            const paidAmount = parseFloat(totalPaidAmountInput?.value) || 0;
+            const extraCharges = parseFloat(extraChargesInput?.value) || 0;
+            const netAmount = paidAmount - extraCharges;
+
+            if(netAmountInput) {
+                netAmountInput.value = netAmount >= 0 ? netAmount.toFixed(2) : '';
+            }
+        }
+
+        if(totalPaidAmountInput) totalPaidAmountInput.addEventListener('input', calculateNetAmount);
+        if(extraChargesInput) extraChargesInput.addEventListener('input', calculateNetAmount);
+    });
 </script>
 @endsection

@@ -13,7 +13,8 @@
 
     <!-- Form (Hidden by default) -->
     <div id="departureForm" class="hidden p-6 border-b border-gray-100">
-        <form action="#" method="POST" class="max-w-4xl space-y-6">
+        <form action="{{ route('item-departures.store') }}" method="POST" class="max-w-4xl space-y-6">
+            @csrf
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Date -->
@@ -27,8 +28,9 @@
                     <label class="text-sm font-medium text-gray-700">Item Master <span class="text-red-500">*</span></label>
                     <select name="item_master" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 bg-white">
                         <option value="">-Select-</option>
-                        <option value="1">Item A</option>
-                        <option value="2">Item B</option>
+                        @foreach($items as $item)
+                            <option value="{{ $item->item_name }}">{{ $item->item_name }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -88,22 +90,20 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
+                @forelse($departures as $departure)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">2026-04-13</td>
-                    <td class="px-6 py-4 text-gray-700">Item A</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">10.00</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">50.00</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">40.00</td>
-                    <td class="px-6 py-4 text-gray-700">Sales</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $departure->date ? $departure->date->format('Y-m-d') : '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $departure->item_master ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($departure->departure_qnty, 2) }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($departure->prev_stock, 2) }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($departure->balance_qnty, 2) }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $departure->notes ?? '-' }}</td>
                 </tr>
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">2026-04-11</td>
-                    <td class="px-6 py-4 text-gray-700">Item B</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">5.00</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">25.00</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">20.00</td>
-                    <td class="px-6 py-4 text-gray-700">Damaged</td>
+                @empty
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">No item departures found. Click "Add Item Departure" to create one.</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
@@ -114,5 +114,48 @@
         const form = document.getElementById('departureForm');
         form.classList.toggle('hidden');
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const itemSelect = document.querySelector('select[name="item_master"]');
+        const prevStockInput = document.querySelector('input[name="prev_stock"]');
+        const departureQntyInput = document.querySelector('input[name="departure_qnty"]');
+        const balanceQntyInput = document.querySelector('input[name="balance_qnty"]');
+
+        // Load previous stock when item is selected
+        if(itemSelect && prevStockInput) {
+            itemSelect.addEventListener('change', function() {
+                const selectedItemName = this.value;
+                const prevStockInput = document.querySelector('input[name="prev_stock"]');
+
+                if(selectedItemName) {
+                    // Find the item data from the $items collection
+                    @foreach($items as $item)
+                    if(selectedItemName === '{{ $item->item_name }}') {
+                        prevStockInput.value = '{{ number_format($item->stock_balance, 2) }}';
+                        calculateBalance();
+                    }
+                    @endforeach
+                } else {
+                    prevStockInput.value = '';
+                    balanceQntyInput.value = '';
+                }
+            });
+        }
+
+        // Calculate balance when departure quantity changes
+        if(departureQntyInput && balanceQntyInput) {
+            departureQntyInput.addEventListener('input', calculateBalance);
+        }
+
+        function calculateBalance() {
+            const prevStock = parseFloat(prevStockInput.value) || 0;
+            const departureQnty = parseFloat(departureQntyInput.value) || 0;
+            const balance = prevStock - departureQnty;
+
+            if(balanceQntyInput) {
+                balanceQntyInput.value = balance >= 0 ? balance.toFixed(2) : '';
+            }
+        }
+    });
 </script>
 @endsection

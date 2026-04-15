@@ -13,7 +13,8 @@
 
     <!-- Form (Hidden by default) -->
     <div id="itemForm" class="hidden p-6 border-b border-gray-100">
-        <form action="#" method="POST" class="max-w-3xl space-y-6">
+        <form action="{{ route('item-master.store') }}" method="POST" class="max-w-3xl space-y-6">
+            @csrf
             
             <div class="flex flex-col md:flex-row md:items-center gap-4">
                 <label class="md:w-56 text-sm font-medium text-gray-700">Item Name <span class="text-red-500">*</span></label>
@@ -59,16 +60,17 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
+                @forelse($items as $item)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">Item A</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">100.00</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">50.00</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $item->item_name }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($item->purchase_rate, 2) }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($item->stock_balance, 2) }}</td>
                 </tr>
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">Item B</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">250.00</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">25.00</td>
+                @empty
+                <tr>
+                    <td colspan="3" class="px-6 py-4 text-center text-gray-500">No items found. Click "Add Item" to create one.</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

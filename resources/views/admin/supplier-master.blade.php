@@ -13,7 +13,8 @@
 
     <!-- Form (Hidden by default) -->
     <div id="supplierForm" class="hidden p-6 border-b border-gray-100">
-        <form action="#" method="POST" class="max-w-3xl space-y-6">
+        <form action="{{ route('supplier-master.store') }}" method="POST" class="max-w-3xl space-y-6">
+            @csrf
             
             <div class="flex flex-col md:flex-row md:items-start md:pt-2 gap-4">
                 <label class="md:w-56 text-sm font-medium text-gray-700 md:mt-1">Supplier Name <span class="text-red-500">*</span></label>
@@ -67,18 +68,18 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
+                @forelse($suppliers as $supplier)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">Supplier A</td>
-                    <td class="px-6 py-4 text-gray-700">123 Main Street, City</td>
-                    <td class="px-6 py-4 text-gray-700">+1234567890</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">5,000.00</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $supplier->supplier_name }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $supplier->address ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $supplier->mobile ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($supplier->due_balance, 2) }}</td>
                 </tr>
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">Supplier B</td>
-                    <td class="px-6 py-4 text-gray-700">456 Oak Avenue, Town</td>
-                    <td class="px-6 py-4 text-gray-700">+0987654321</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">2,500.00</td>
+                @empty
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">No suppliers found. Click "Add Supplier" to create one.</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

@@ -13,7 +13,8 @@
 
     <!-- Form (Hidden by default) -->
     <div id="paymentForm" class="hidden p-6 border-b border-gray-100">
-        <form action="#" method="POST" class="max-w-4xl space-y-6">
+        <form action="{{ route('bill-payments.store') }}" method="POST" class="max-w-4xl space-y-6">
+            @csrf
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Date -->
@@ -27,8 +28,9 @@
                     <label class="text-sm font-medium text-gray-700">Supplier Name <span class="text-red-500">*</span></label>
                     <select name="supplier_name" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 bg-white">
                         <option value="">-Select-</option>
-                        <option value="1">Supplier A</option>
-                        <option value="2">Supplier B</option>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->supplier_name }}">{{ $supplier->supplier_name }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -39,8 +41,9 @@
                     <label class="text-sm font-medium text-gray-700">Account Master <span class="text-red-500">*</span></label>
                     <select name="account_master" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 bg-white">
                         <option value="">-Select-</option>
-                        <option value="1">Main Account</option>
-                        <option value="2">Petty Cash</option>
+                        @foreach($accounts as $account)
+                            <option value="{{ $account->account_number }}">{{ $account->account_number }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -97,22 +100,20 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
+                @forelse($payments as $payment)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">2026-04-13</td>
-                    <td class="px-6 py-4 text-gray-700">Supplier A</td>
-                    <td class="px-6 py-4 text-gray-700">Main Account</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">5,000.00</td>
-                    <td class="px-6 py-4 text-gray-700">John Doe</td>
-                    <td class="px-6 py-4 text-gray-700">Payment for invoice #123</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $payment->date ? $payment->date->format('Y-m-d') : '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $payment->supplier_name ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $payment->account_master ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-right">{{ number_format($payment->paid_amount, 2) }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $payment->paid_by ?? '-' }}</td>
+                    <td class="px-6 py-4 text-gray-700">{{ $payment->notes ?? '-' }}</td>
                 </tr>
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-gray-700">2026-04-10</td>
-                    <td class="px-6 py-4 text-gray-700">Supplier B</td>
-                    <td class="px-6 py-4 text-gray-700">Petty Cash</td>
-                    <td class="px-6 py-4 text-gray-700 text-right">2,500.00</td>
-                    <td class="px-6 py-4 text-gray-700">Jane Smith</td>
-                    <td class="px-6 py-4 text-gray-700">Partial payment</td>
+                @empty
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">No bill payments found. Click "Add Payment" to create one.</td>
                 </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
@@ -123,5 +124,28 @@
         const form = document.getElementById('paymentForm');
         form.classList.toggle('hidden');
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const supplierSelect = document.querySelector('select[name="supplier_name"]');
+        const lastBalanceInput = document.querySelector('input[name="last_balance"]');
+
+        // Load last balance when supplier is selected
+        if(supplierSelect && lastBalanceInput) {
+            supplierSelect.addEventListener('change', function() {
+                const selectedSupplierName = this.value;
+
+                if(selectedSupplierName) {
+                    // Find the supplier data from the $suppliers collection
+                    @foreach($suppliers as $supplier)
+                    if(selectedSupplierName === '{{ $supplier->supplier_name }}') {
+                        lastBalanceInput.value = '{{ number_format($supplier->due_balance, 2) }}';
+                    }
+                    @endforeach
+                } else {
+                    lastBalanceInput.value = '';
+                }
+            });
+        }
+    });
 </script>
 @endsection

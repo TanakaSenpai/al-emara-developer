@@ -5,13 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\DailyExpense;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DailyExpenseController extends Controller
 {
     public function index()
     {
-        $expenses = DailyExpense::with('account')->orderBy('expense_date', 'desc')->orderBy('id', 'desc')->get();
-        $accounts = Account::all();
+        try {
+            $expenses = DailyExpense::with('account')->orderBy('expense_date', 'desc')->orderBy('id', 'desc')->get();
+            $accounts = Account::all();
+        } catch (\Exception $e) {
+            Log::error('Error loading expenses: '.$e->getMessage());
+            $expenses = collect();
+            $accounts = collect();
+            session()->now('error', 'Database Error: '.$e->getMessage());
+        }
 
         return view('admin.daily-expenses', compact('expenses', 'accounts'));
     }
@@ -24,11 +32,17 @@ class DailyExpenseController extends Controller
             'expense_amount' => 'required|numeric|min:0',
             'expense_by' => 'nullable|string|max:255',
             'voucher_no' => 'nullable|string|max:255',
-            'account_id' => 'nullable|exists:accounts,id',
+            'account_id' => 'nullable|exists:account_masters,id',
         ]);
 
-        DailyExpense::create($validated);
+        try {
+            DailyExpense::create($validated);
 
-        return redirect()->route('daily-expenses.index')->with('success', 'Expense added successfully!');
+            return redirect()->route('daily-expenses.index')->with('success', 'Expense added successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error creating daily expense: '.$e->getMessage());
+
+            return back()->with('error', 'Error saving expense: '.$e->getMessage())->withInput();
+        }
     }
 }

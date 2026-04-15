@@ -1,155 +1,158 @@
--- =====================================================
--- AL-EMARA DEVELOPER - DATABASE SCHEMA
--- =====================================================
+SET FOREIGN_KEY_CHECKS = 0;
 
--- Users table (for registration/login)
-CREATE TABLE users (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    email_verified_at TIMESTAMP NULL,
-    password VARCHAR(255) NOT NULL,
-    remember_token VARCHAR(100) NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
+-- Drop existing tables so we start fresh
+DROP TABLE IF EXISTS `account_masters`;
+DROP TABLE IF EXISTS `bill_payments`;
+DROP TABLE IF EXISTS `budget_plans`;
+DROP TABLE IF EXISTS `daily_expenses`;
+DROP TABLE IF EXISTS `item_departures`;
+DROP TABLE IF EXISTS `item_masters`;
+DROP TABLE IF EXISTS `partner_collections`;
+DROP TABLE IF EXISTS `partner_masters`;
+DROP TABLE IF EXISTS `stock_entries`;
+DROP TABLE IF EXISTS `stock_entry_details`;
+DROP TABLE IF EXISTS `supplier_masters`;
+
+-- 1. Account Masters
+CREATE TABLE `account_masters` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `account_number` VARCHAR(255) NOT NULL,
+    `description` TEXT NULL,
+    `balance_amount` DECIMAL(15,2) DEFAULT 0.00,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
 );
 
--- Password reset tokens (for login recovery)
-CREATE TABLE password_reset_tokens (
-    email VARCHAR(255) PRIMARY KEY,
-    token VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NULL
+-- 2. Supplier Masters
+CREATE TABLE `supplier_masters` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `supplier_name` VARCHAR(255) NOT NULL,
+    `mobile` VARCHAR(50) NULL,
+    `address` TEXT NULL,
+    `due_balance` DECIMAL(15,2) DEFAULT 0.00,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
 );
 
--- Sessions (for login state)
-CREATE TABLE sessions (
-    id VARCHAR(255) PRIMARY KEY,
-    user_id BIGINT UNSIGNED NULL,
-    ip_address VARCHAR(45) NULL,
-    user_agent TEXT NULL,
-    payload LONGTEXT NOT NULL,
-    last_activity INT NOT NULL,
-    INDEX idx_user_id (user_id),
-    INDEX idx_last_activity (last_activity)
+-- 3. Item Masters
+CREATE TABLE `item_masters` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `item_name` VARCHAR(255) NOT NULL,
+    `purchase_rate` DECIMAL(15,2) DEFAULT 0.00,
+    `stock_balance` DECIMAL(15,2) DEFAULT 0.00,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
 );
 
--- Items table
-CREATE TABLE items (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    item_name VARCHAR(255) NOT NULL,
-    purchase_rate DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    stock_balance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
+-- 4. Partner Masters
+CREATE TABLE `partner_masters` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `partner_name` VARCHAR(255) NOT NULL,
+    `mobile` VARCHAR(50) NULL,
+    `address` TEXT NULL,
+    `due_amount` DECIMAL(15,2) DEFAULT 0.00,
+    `extra_amount` DECIMAL(15,2) DEFAULT 0.00,
+    `paid_amount` DECIMAL(15,2) DEFAULT 0.00,
+    `total_charges` DECIMAL(15,2) DEFAULT 0.00,
+    `notes` TEXT NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
 );
 
--- Suppliers table
-CREATE TABLE suppliers (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    supplier_name VARCHAR(255) NOT NULL,
-    address TEXT NULL,
-    mobile VARCHAR(50) NOT NULL,
-    due_balance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
+-- 5. Bill Payments
+CREATE TABLE `bill_payments` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `date` DATE NULL,
+    `supplier_name` VARCHAR(255) NULL,
+    `account_master` VARCHAR(255) NULL,
+    `last_balance` DECIMAL(15,2) DEFAULT 0.00,
+    `paid_amount` DECIMAL(15,2) DEFAULT 0.00,
+    `paid_by` VARCHAR(255) NULL,
+    `notes` TEXT NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
 );
 
--- Account Masters table
-CREATE TABLE accounts (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    account_name VARCHAR(255) NOT NULL,
-    account_type VARCHAR(100) NULL,
-    balance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    description TEXT NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
+-- 6. Budget Plans
+CREATE TABLE `budget_plans` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `date` DATE NULL,
+    `partner_master` VARCHAR(255) NULL,
+    `budget_details` TEXT NULL,
+    `charge_amount` DECIMAL(15,2) DEFAULT 0.00,
+    `notes` TEXT NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
 );
 
--- Partners table
-CREATE TABLE partners (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    partner_name VARCHAR(255) NOT NULL,
-    contact_info VARCHAR(255) NULL,
-    address TEXT NULL,
-    balance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
+-- 7. Daily Expenses
+CREATE TABLE `daily_expenses` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `expense_date` DATE NULL,
+    `account_id` BIGINT UNSIGNED NULL,
+    `expense_details` TEXT NULL,
+    `expense_amount` DECIMAL(15,2) DEFAULT 0.00,
+    `expense_by` VARCHAR(255) NULL,
+    `voucher_no` VARCHAR(255) NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
 );
 
--- Daily Expenses table
-CREATE TABLE daily_expenses (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    expense_date DATE NOT NULL,
-    expense_type VARCHAR(255) NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    description TEXT NULL,
-    account_id BIGINT UNSIGNED NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL
+-- 8. Item Departures
+CREATE TABLE `item_departures` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `date` DATE NULL,
+    `item_master` VARCHAR(255) NULL,
+    `prev_stock` DECIMAL(15,2) DEFAULT 0.00,
+    `departure_qnty` DECIMAL(15,2) DEFAULT 0.00,
+    `balance_qnty` DECIMAL(15,2) DEFAULT 0.00,
+    `notes` TEXT NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
 );
 
--- Bill Payments table
-CREATE TABLE bill_payments (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    bill_number VARCHAR(100) NOT NULL,
-    supplier_id BIGINT UNSIGNED NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    payment_date DATE NOT NULL,
-    payment_method VARCHAR(50) NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE CASCADE
+-- 9. Partner Collections
+CREATE TABLE `partner_collections` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `date` DATE NULL,
+    `partners` VARCHAR(255) NULL,
+    `budget_plan` VARCHAR(255) NULL,
+    `account_master` VARCHAR(255) NULL,
+    `total_due_balance` DECIMAL(15,2) DEFAULT 0.00,
+    `total_paid_amount` DECIMAL(15,2) DEFAULT 0.00,
+    `extra_charges` DECIMAL(15,2) DEFAULT 0.00,
+    `net_amount` DECIMAL(15,2) DEFAULT 0.00,
+    `notes` TEXT NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
 );
 
--- Budget Plans table
-CREATE TABLE budget_plans (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    budget_year INT NOT NULL,
-    budget_month VARCHAR(20) NOT NULL,
-    allocated_amount DECIMAL(10,2) NOT NULL,
-    spent_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    category VARCHAR(100) NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
+-- 10. Stock Entries (Parent)
+CREATE TABLE `stock_entries` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `date` DATE NULL,
+    `supplier_master` VARCHAR(255) NULL,
+    `ref_party_chalan` VARCHAR(255) NULL,
+    `date_of_party_chalan` DATE NULL,
+    `sub_total` DECIMAL(15,2) DEFAULT 0.00,
+    `notes` TEXT NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL
 );
 
--- Partner Collections table
-CREATE TABLE partner_collections (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    partner_id BIGINT UNSIGNED NOT NULL,
-    collection_date DATE NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    notes TEXT NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE CASCADE
+-- 11. Stock Entry Details (Child table for the [] arrays)
+CREATE TABLE `stock_entry_details` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `stock_entry_id` BIGINT UNSIGNED NOT NULL,
+    `item_master` VARCHAR(255) NULL,
+    `old_stock` DECIMAL(15,2) DEFAULT 0.00,
+    `qnty` DECIMAL(15,2) DEFAULT 0.00,
+    `new_stock` DECIMAL(15,2) DEFAULT 0.00,
+    `purchase_rate` DECIMAL(15,2) DEFAULT 0.00,
+    `total_price` DECIMAL(15,2) DEFAULT 0.00,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL,
+    FOREIGN KEY (`stock_entry_id`) REFERENCES `stock_entries`(`id`) ON DELETE CASCADE
 );
 
--- Stock Entries table
-CREATE TABLE stock_entries (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    entry_date DATE NOT NULL,
-    item_id BIGINT UNSIGNED NOT NULL,
-    supplier_id BIGINT UNSIGNED NULL,
-    quantity DECIMAL(10,2) NOT NULL,
-    rate DECIMAL(10,2) NOT NULL,
-    total_amount DECIMAL(10,2) NOT NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
-    FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL
-);
-
--- Item Departures table
-CREATE TABLE item_departures (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    departure_date DATE NOT NULL,
-    item_id BIGINT UNSIGNED NOT NULL,
-    quantity DECIMAL(10,2) NOT NULL,
-    destination VARCHAR(255) NULL,
-    notes TEXT NULL,
-    created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL,
-    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
-);
+SET FOREIGN_KEY_CHECKS = 1;

@@ -117,6 +117,34 @@
 
         <!-- Main Content -->
         <main class="flex-1 overflow-auto p-6">
+            @if(session('success'))
+                <div class="mb-4 px-4 py-3 rounded text-sm bg-green-50 border border-green-200 text-green-700 font-medium flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="mb-4 px-4 py-3 rounded text-sm bg-red-50 border border-red-200 text-red-700 font-medium flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="mb-4 px-4 py-3 rounded text-sm bg-red-50 border border-red-200 text-red-700 font-medium">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                        <span>Please correct the following errors:</span>
+                    </div>
+                    <ul class="list-disc list-inside ml-6 text-sm">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @yield('content')
         </main>
         
