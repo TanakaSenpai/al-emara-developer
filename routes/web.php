@@ -59,6 +59,9 @@ Route::post('/partner-collection', [PartnerCollectionController::class, 'store']
 
 Route::get('/stock-entry', [StockEntryController::class, 'index'])->name('stock-entry.index');
 Route::post('/stock-entry', [StockEntryController::class, 'store'])->name('stock-entry.store');
+Route::get('/stock-entry/{stockEntry}/edit', [StockEntryController::class, 'edit'])->name('stock-entry.edit');
+Route::put('/stock-entry/{stockEntry}', [StockEntryController::class, 'update'])->name('stock-entry.update');
+Route::delete('/stock-entry/{stockEntry}', [StockEntryController::class, 'destroy'])->name('stock-entry.destroy');
 
 Route::get('/item-departures', [ItemDepartureController::class, 'index'])->name('item-departures.index');
 Route::post('/item-departures', [ItemDepartureController::class, 'store'])->name('item-departures.store');
