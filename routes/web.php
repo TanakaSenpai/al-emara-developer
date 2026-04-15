@@ -44,6 +44,9 @@ Route::post('/partner-master', [PartnerMasterController::class, 'store'])->name(
 
 Route::get('/daily-expenses', [DailyExpenseController::class, 'index'])->name('daily-expenses.index');
 Route::post('/daily-expenses', [DailyExpenseController::class, 'store'])->name('daily-expenses.store');
+Route::get('/daily-expenses/{dailyExpense}/edit', [DailyExpenseController::class, 'edit'])->name('daily-expenses.edit');
+Route::put('/daily-expenses/{dailyExpense}', [DailyExpenseController::class, 'update'])->name('daily-expenses.update');
+Route::delete('/daily-expenses/{dailyExpense}', [DailyExpenseController::class, 'destroy'])->name('daily-expenses.destroy');
 
 Route::get('/bill-payments', [BillPaymentController::class, 'index'])->name('bill-payments.index');
 Route::post('/bill-payments', [BillPaymentController::class, 'store'])->name('bill-payments.store');

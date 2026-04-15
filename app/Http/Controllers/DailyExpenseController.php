@@ -45,4 +45,45 @@ class DailyExpenseController extends Controller
             return back()->with('error', 'Error saving expense: '.$e->getMessage())->withInput();
         }
     }
+
+    public function edit(DailyExpense $dailyExpense)
+    {
+        $accounts = Account::all();
+        return view('admin.daily-expenses', compact('dailyExpense', 'accounts'));
+    }
+
+    public function update(Request $request, DailyExpense $dailyExpense)
+    {
+        $validated = $request->validate([
+            'expense_date' => 'required|date',
+            'expense_details' => 'required|string|max:255',
+            'expense_amount' => 'required|numeric|min:0',
+            'expense_by' => 'nullable|string|max:255',
+            'voucher_no' => 'nullable|string|max:255',
+            'account_id' => 'nullable|exists:account_masters,id',
+        ]);
+
+        try {
+            $dailyExpense->update($validated);
+
+            return redirect()->route('daily-expenses.index')->with('success', 'Expense updated successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error updating daily expense: '.$e->getMessage());
+
+            return back()->with('error', 'Error updating expense: '.$e->getMessage())->withInput();
+        }
+    }
+
+    public function destroy(DailyExpense $dailyExpense)
+    {
+        try {
+            $dailyExpense->delete();
+
+            return redirect()->route('daily-expenses.index')->with('success', 'Expense deleted successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error deleting daily expense: '.$e->getMessage());
+
+            return back()->with('error', 'Error deleting expense: '.$e->getMessage());
+        }
+    }
 }
