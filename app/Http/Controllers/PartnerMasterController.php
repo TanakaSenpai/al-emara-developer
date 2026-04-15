@@ -54,4 +54,55 @@ class PartnerMasterController extends Controller
             return back()->with('error', 'Error saving partner: '.$e->getMessage())->withInput();
         }
     }
+
+    public function edit(PartnerMaster $partnerMaster)
+    {
+        return view('admin.partner-master', compact('partnerMaster'));
+    }
+
+    public function update(Request $request, PartnerMaster $partnerMaster)
+    {
+        $request->validate([
+            'partner_name' => 'required|string|max:255|unique:partner_masters,partner_name,'.$partnerMaster->id,
+            'mobile' => 'required|string|max:50',
+            'address' => 'nullable|string|max:1000',
+            'total_charges' => 'nullable|numeric|min:0',
+            'paid_amount' => 'nullable|numeric|min:0',
+            'due_amount' => 'nullable|numeric|min:0',
+            'extra_amount' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $partnerMaster->update([
+                'partner_name' => $request->partner_name,
+                'mobile' => $request->mobile,
+                'address' => $request->address,
+                'total_charges' => $request->total_charges ?? 0,
+                'paid_amount' => $request->paid_amount ?? 0,
+                'due_amount' => $request->due_amount ?? 0,
+                'extra_amount' => $request->extra_amount ?? 0,
+                'notes' => $request->notes,
+            ]);
+
+            return redirect()->route('partner-master.index')->with('success', 'Partner updated successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error updating partner: '.$e->getMessage());
+
+            return back()->with('error', 'Error updating partner: '.$e->getMessage())->withInput();
+        }
+    }
+
+    public function destroy(PartnerMaster $partnerMaster)
+    {
+        try {
+            $partnerMaster->delete();
+
+            return redirect()->route('partner-master.index')->with('success', 'Partner deleted successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error deleting partner: '.$e->getMessage());
+
+            return back()->with('error', 'Error deleting partner: '.$e->getMessage());
+        }
+    }
 }

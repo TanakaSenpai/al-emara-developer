@@ -44,4 +44,43 @@ class AccountMasterController extends Controller
 
         return redirect()->route('account-masters.index')->with('success', 'Account created successfully!');
     }
+
+    public function edit(Account $account)
+    {
+        return view('admin.account-masters', compact('account'));
+    }
+
+    public function update(Request $request, Account $account)
+    {
+        $validated = $request->validate([
+            'account_number' => 'required|string|max:255|unique:account_masters,account_number,'.$account->id,
+            'description' => 'required|string|max:255',
+            'balance_amount' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $account->update($validated);
+            Log::info('Account updated', ['id' => $account->id]);
+
+            return redirect()->route('account-masters.index')->with('success', 'Account updated successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error updating account: '.$e->getMessage());
+
+            return back()->with('error', 'Error updating account: '.$e->getMessage())->withInput();
+        }
+    }
+
+    public function destroy(Account $account)
+    {
+        try {
+            $account->delete();
+            Log::info('Account deleted', ['id' => $account->id]);
+
+            return redirect()->route('account-masters.index')->with('success', 'Account deleted successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error deleting account: '.$e->getMessage());
+
+            return back()->with('error', 'Error deleting account: '.$e->getMessage());
+        }
+    }
 }
