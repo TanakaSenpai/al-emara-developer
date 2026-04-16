@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -34,20 +35,6 @@ class LoginController extends Controller
         $credentials = $request->only('email', 'password');
         $remember = $request->boolean('remember');
 
-        // Check hardcoded admin credentials first
-        if ($request->email === 'admin@example.com' && $request->password === 'password') {
-            // Create a simple admin user in session
-            session(['authenticated' => true, 'user_email' => $request->email]);
-            Log::info('Admin logged in', ['email' => $request->email]);
-
-            if ($remember) {
-                cookie()->queue('remember_email', $request->email, 60 * 24 * 30); // 30 days
-            }
-
-            return redirect()->route('dashboard');
-        }
-
-        // If you have a users table with Laravel Auth
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
             Log::info('User logged in via Auth', ['email' => $request->email]);
@@ -65,10 +52,43 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-        session()->forget(['authenticated', 'user_email']);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    /**
+     * Show the registration form.
+     */
+    public function showRegisterForm()
+    {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+        return view('auth.register');
+    }
+
+    /**
+     * Handle registration request.
+     */
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        Auth::login($user);
+        Log::info('New user registered', ['email' => $request->email]);
+
+        return redirect()->route('dashboard');
     }
 }

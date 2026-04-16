@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login - Al Emara Developer</title>
+    <title>Register - Al Emara Developer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    <!-- Right Side: Login Form -->
+    <!-- Right Side: Register Form -->
     <div class="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-24 bg-gray-50 lg:bg-white relative">
         <div class="w-full max-w-md">
 
@@ -44,26 +44,35 @@
 
             <!-- Form Header -->
             <div class="mb-10 lg:text-left text-center">
-                <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Welcome back</h2>
-                <p class="text-sm text-gray-500 mt-2">Please enter your details to sign in.</p>
+                <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Create account</h2>
+                <p class="text-sm text-gray-500 mt-2">Enter your details to get started.</p>
             </div>
 
             <!-- Error Messages -->
             @if($errors->any())
                 <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p class="text-sm text-red-700">{{ $errors->first() }}</p>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p class="text-sm text-red-700">{{ session('error') }}</p>
+                    <ul class="text-sm text-red-700 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 
             <!-- Form -->
-            <form action="{{ route('login') }}" method="POST" class="space-y-6">
+            <form action="{{ route('register') }}" method="POST" class="space-y-5">
                 @csrf
+
+                <!-- Name -->
+                <div class="space-y-2">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="h-5 w-5 text-gray-400"></i>
+                        </div>
+                        <input type="text" name="name" id="name" class="block w-full rounded-lg border border-gray-200 pl-11 pr-4 py-3 text-sm focus:border-[#3eb27e] focus:ring-1 focus:ring-[#3eb27e] transition-colors bg-gray-50 focus:bg-white placeholder-gray-400" placeholder="John Doe" value="{{ old('name') }}" required autofocus>
+                    </div>
+                </div>
 
                 <!-- Email -->
                 <div class="space-y-2">
@@ -72,7 +81,7 @@
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <i data-lucide="mail" class="h-5 w-5 text-gray-400"></i>
                         </div>
-                        <input type="email" name="email" id="email" class="block w-full rounded-lg border border-gray-200 pl-11 pr-4 py-3 text-sm focus:border-[#3eb27e] focus:ring-1 focus:ring-[#3eb27e] transition-colors bg-gray-50 focus:bg-white placeholder-gray-400" placeholder="Enter your email" required autofocus>
+                        <input type="email" name="email" id="email" class="block w-full rounded-lg border border-gray-200 pl-11 pr-4 py-3 text-sm focus:border-[#3eb27e] focus:ring-1 focus:ring-[#3eb27e] transition-colors bg-gray-50 focus:bg-white placeholder-gray-400" placeholder="john@example.com" value="{{ old('email') }}" required>
                     </div>
                 </div>
 
@@ -85,28 +94,30 @@
                         </div>
                         <input type="password" name="password" id="password" class="block w-full rounded-lg border border-gray-200 pl-11 pr-4 py-3 text-sm focus:border-[#3eb27e] focus:ring-1 focus:ring-[#3eb27e] transition-colors bg-gray-50 focus:bg-white placeholder-gray-400" placeholder="••••••••" required>
                     </div>
+                    <p class="text-xs text-gray-500">Must be at least 8 characters</p>
                 </div>
 
-                <!-- Remember Me & Forgot Password -->
-                <div class="flex items-center justify-between pt-2">
-                    <div class="flex items-center">
-                        <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-[#3eb27e] focus:ring-[#3eb27e] border-gray-300 rounded cursor-pointer transition-colors">
-                        <label for="remember" class="ml-2 block text-sm text-gray-600 cursor-pointer">
-                            Remember me
-                        </label>
+                <!-- Confirm Password -->
+                <div class="space-y-2">
+                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="shield-check" class="h-5 w-5 text-gray-400"></i>
+                        </div>
+                        <input type="password" name="password_confirmation" id="password_confirmation" class="block w-full rounded-lg border border-gray-200 pl-11 pr-4 py-3 text-sm focus:border-[#3eb27e] focus:ring-1 focus:ring-[#3eb27e] transition-colors bg-gray-50 focus:bg-white placeholder-gray-400" placeholder="••••••••" required>
                     </div>
                 </div>
 
                 <!-- Submit -->
                 <div class="pt-4">
                     <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-[#3eb27e] hover:bg-[#349c6d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3eb27e] transition-all active:scale-[0.98] cursor-pointer">
-                        Sign In
+                        Sign Up
                     </button>
                 </div>
             </form>
 
             <div class="mt-6 text-center text-sm">
-                <p class="text-gray-500">Don't have an account? <a href="{{ route('register') }}" class="text-[#3eb27e] hover:text-[#2a7a56] font-medium">Sign up</a></p>
+                <p class="text-gray-500">Already have an account? <a href="{{ route('login') }}" class="text-[#3eb27e] hover:text-[#2a7a56] font-medium">Sign in</a></p>
             </div>
 
         </div>

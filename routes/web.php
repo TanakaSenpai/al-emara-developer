@@ -21,6 +21,9 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::get('/register', [LoginController::class, 'showRegisterForm'])->name('register');
+Route::post('/register', [LoginController::class, 'register']);
+
 Route::middleware(['auth.custom'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
