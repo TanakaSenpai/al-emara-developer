@@ -67,6 +67,9 @@
             <a href="/account-masters" class="{{ request()->is('account-masters') ? 'sidebar-item-active' : 'sidebar-item' }} flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors">
                 Account Masters
             </a>
+            <a href="/account-logs" class="{{ request()->is('account-logs') ? 'sidebar-item-active' : 'sidebar-item' }} flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors">
+                Account Log
+            </a>
             <a href="/partner-master" class="{{ request()->is('partner-master') ? 'sidebar-item-active' : 'sidebar-item' }} flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors">
                 Partner Master
             </a>
@@ -77,9 +80,9 @@
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-[#3eb27e] text-white flex items-center justify-center font-bold text-xs">
-                        A
+                        {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
                     </div>
-                    <span class="text-sm font-medium truncate w-24">Admin User</span>
+                    <span class="text-sm font-medium truncate w-24">{{ Auth::user()->name ?? 'User' }}</span>
                 </div>
                 <div class="flex gap-2">
                     <form action="{{ route('logout') }}" method="POST" class="inline">
@@ -114,6 +117,7 @@
                     @elseif(request()->is('partner-collection')) Partner Collection
                     @elseif(request()->is('supplier-master')) Supplier Master
                     @elseif(request()->is('account-masters')) Account Masters
+                    @elseif(request()->is('account-logs')) Account Log
                     @elseif(request()->is('partner-master')) Partner Master
                     @else {{ ucwords(str_replace('-', ' ', request()->path())) }}
                     @endif

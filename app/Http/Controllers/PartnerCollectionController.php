@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\AccountLog;
 use App\Models\BudgetPlan;
 use App\Models\PartnerCollection;
 use App\Models\PartnerMaster;
@@ -51,7 +52,7 @@ class PartnerCollectionController extends Controller
             // Calculate net amount (paid - extra charges)
             $netAmount = $request->net_amount ?? ($request->total_paid_amount - ($request->extra_charges ?? 0));
 
-            PartnerCollection::create([
+            $partnerCollection = PartnerCollection::create([
                 'date' => $request->date,
                 'partners' => $request->partners,
                 'budget_plan' => $request->budget_plan,
@@ -68,6 +69,26 @@ class PartnerCollectionController extends Controller
                 $partner->update([
                     'paid_amount' => $partner->paid_amount + $request->total_paid_amount,
                     'due_amount' => $partner->due_amount - $netAmount,
+                ]);
+            }
+
+            // Update account balance (add collection amount) and create log entry
+            $account = Account::where('account_number', $request->account_master)->first();
+            if ($account) {
+                $newBalance = $account->balance_amount + $netAmount;
+                $account->update(['balance_amount' => $newBalance]);
+
+                // Create account log entry (credit - money coming in)
+                AccountLog::create([
+                    'transaction_date' => $request->date,
+                    'account_id' => $account->id,
+                    'transaction_type' => 'Partner Collection',
+                    'description' => 'Collection from ' . $request->partners . ' (Net: ' . $netAmount . ', Paid: ' . $request->total_paid_amount . ')',
+                    'debit_amount' => 0,
+                    'credit_amount' => $netAmount,
+                    'balance_after' => $newBalance,
+                    'reference_id' => $partnerCollection->id,
+                    'reference_type' => PartnerCollection::class,
                 ]);
             }
 
@@ -103,11 +124,31 @@ class PartnerCollectionController extends Controller
         try {
             // Revert old partner's balances
             $oldPartner = PartnerMaster::where('partner_name', $partnerCollection->partners)->first();
+            $oldNetAmount = $partnerCollection->net_amount;
             if ($oldPartner) {
-                $oldNetAmount = $partnerCollection->net_amount;
                 $oldPartner->update([
                     'paid_amount' => $oldPartner->paid_amount - $partnerCollection->total_paid_amount,
                     'due_amount' => $oldPartner->due_amount + $oldNetAmount,
+                ]);
+            }
+
+            // Revert old account balance (subtract old collection amount)
+            $oldAccount = Account::where('account_number', $partnerCollection->account_master)->first();
+            if ($oldAccount) {
+                $revertedBalance = $oldAccount->balance_amount - $oldNetAmount;
+                $oldAccount->update(['balance_amount' => $revertedBalance]);
+
+                // Create account log entry for the reversal
+                AccountLog::create([
+                    'transaction_date' => $request->date,
+                    'account_id' => $oldAccount->id,
+                    'transaction_type' => 'Partner Collection (Reversed)',
+                    'description' => 'Reversal: Collection from ' . $partnerCollection->partners,
+                    'debit_amount' => $oldNetAmount,
+                    'credit_amount' => 0,
+                    'balance_after' => $revertedBalance,
+                    'reference_id' => $partnerCollection->id,
+                    'reference_type' => PartnerCollection::class,
                 ]);
             }
 
@@ -139,6 +180,26 @@ class PartnerCollectionController extends Controller
                 ]);
             }
 
+            // Update new account balance (add new collection amount) and create log entry
+            $newAccount = Account::where('account_number', $request->account_master)->first();
+            if ($newAccount) {
+                $newBalance = $newAccount->balance_amount + $netAmount;
+                $newAccount->update(['balance_amount' => $newBalance]);
+
+                // Create account log entry
+                AccountLog::create([
+                    'transaction_date' => $request->date,
+                    'account_id' => $newAccount->id,
+                    'transaction_type' => 'Partner Collection (Update)',
+                    'description' => 'Updated: Collection from ' . $request->partners . ' (Net: ' . $netAmount . ')',
+                    'debit_amount' => 0,
+                    'credit_amount' => $netAmount,
+                    'balance_after' => $newBalance,
+                    'reference_id' => $partnerCollection->id,
+                    'reference_type' => PartnerCollection::class,
+                ]);
+            }
+
             return redirect()->route('partner-collection.index')->with('success', 'Partner collection updated successfully!');
         } catch (\Exception $e) {
             Log::error('Error updating partner collection: '.$e->getMessage());
@@ -152,10 +213,31 @@ class PartnerCollectionController extends Controller
         try {
             // Revert partner's balances
             $partner = PartnerMaster::where('partner_name', $partnerCollection->partners)->first();
+            $netAmount = $partnerCollection->net_amount;
             if ($partner) {
                 $partner->update([
                     'paid_amount' => $partner->paid_amount - $partnerCollection->total_paid_amount,
-                    'due_amount' => $partner->due_amount + $partnerCollection->net_amount,
+                    'due_amount' => $partner->due_amount + $netAmount,
+                ]);
+            }
+
+            // Revert account balance (subtract collection amount) and create log entry
+            $account = Account::where('account_number', $partnerCollection->account_master)->first();
+            if ($account) {
+                $newBalance = $account->balance_amount - $netAmount;
+                $account->update(['balance_amount' => $newBalance]);
+
+                // Create account log entry for the reversal
+                AccountLog::create([
+                    'transaction_date' => now()->format('Y-m-d'),
+                    'account_id' => $account->id,
+                    'transaction_type' => 'Partner Collection (Deleted)',
+                    'description' => 'Reversal: Collection from ' . $partnerCollection->partners,
+                    'debit_amount' => $netAmount,
+                    'credit_amount' => 0,
+                    'balance_after' => $newBalance,
+                    'reference_id' => null,
+                    'reference_type' => null,
                 ]);
             }
 

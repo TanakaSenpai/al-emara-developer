@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\AccountLog;
 use App\Models\BillPayment;
 use App\Models\SupplierMaster;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class BillPaymentController extends Controller
             $supplier = SupplierMaster::where('supplier_name', $request->supplier_name)->first();
             $lastBalance = $supplier ? $supplier->due_balance : 0;
 
-            BillPayment::create([
+            $billPayment = BillPayment::create([
                 'date' => $request->date,
                 'supplier_name' => $request->supplier_name,
                 'account_master' => $request->account_master,
@@ -56,6 +57,26 @@ class BillPaymentController extends Controller
             // Update supplier's due balance (subtract paid amount)
             if ($supplier) {
                 $supplier->update(['due_balance' => $lastBalance - $request->paid_amount]);
+            }
+
+            // Update account balance (deduct paid amount) and create log entry
+            $account = Account::where('account_number', $request->account_master)->first();
+            if ($account) {
+                $newBalance = $account->balance_amount - $request->paid_amount;
+                $account->update(['balance_amount' => $newBalance]);
+
+                // Create account log entry
+                AccountLog::create([
+                    'transaction_date' => $request->date,
+                    'account_id' => $account->id,
+                    'transaction_type' => 'Bill Payment',
+                    'description' => 'Payment to ' . $request->supplier_name . ($request->paid_by ? ' by ' . $request->paid_by : ''),
+                    'debit_amount' => $request->paid_amount,
+                    'credit_amount' => 0,
+                    'balance_after' => $newBalance,
+                    'reference_id' => $billPayment->id,
+                    'reference_type' => BillPayment::class,
+                ]);
             }
 
             return redirect()->route('bill-payments.index')->with('success', 'Bill payment recorded successfully!');
@@ -91,6 +112,26 @@ class BillPaymentController extends Controller
                 $oldSupplier->update(['due_balance' => $oldSupplier->due_balance + $billPayment->paid_amount]);
             }
 
+            // Revert old account balance (add back old paid amount)
+            $oldAccount = Account::where('account_number', $billPayment->account_master)->first();
+            if ($oldAccount) {
+                $revertedBalance = $oldAccount->balance_amount + $billPayment->paid_amount;
+                $oldAccount->update(['balance_amount' => $revertedBalance]);
+
+                // Create account log entry for the reversal
+                AccountLog::create([
+                    'transaction_date' => $request->date,
+                    'account_id' => $oldAccount->id,
+                    'transaction_type' => 'Bill Payment (Reversed)',
+                    'description' => 'Reversal: Payment to ' . $billPayment->supplier_name,
+                    'debit_amount' => 0,
+                    'credit_amount' => $billPayment->paid_amount,
+                    'balance_after' => $revertedBalance,
+                    'reference_id' => $billPayment->id,
+                    'reference_type' => BillPayment::class,
+                ]);
+            }
+
             // Get new supplier's current due balance
             $newSupplier = SupplierMaster::where('supplier_name', $request->supplier_name)->first();
             $lastBalance = $newSupplier ? $newSupplier->due_balance : 0;
@@ -111,6 +152,26 @@ class BillPaymentController extends Controller
                 $newSupplier->update(['due_balance' => $lastBalance - $request->paid_amount]);
             }
 
+            // Update new account balance (deduct new paid amount) and create log entry
+            $newAccount = Account::where('account_number', $request->account_master)->first();
+            if ($newAccount) {
+                $newBalance = $newAccount->balance_amount - $request->paid_amount;
+                $newAccount->update(['balance_amount' => $newBalance]);
+
+                // Create account log entry
+                AccountLog::create([
+                    'transaction_date' => $request->date,
+                    'account_id' => $newAccount->id,
+                    'transaction_type' => 'Bill Payment (Update)',
+                    'description' => 'Updated: Payment to ' . $request->supplier_name . ($request->paid_by ? ' by ' . $request->paid_by : ''),
+                    'debit_amount' => $request->paid_amount,
+                    'credit_amount' => 0,
+                    'balance_after' => $newBalance,
+                    'reference_id' => $billPayment->id,
+                    'reference_type' => BillPayment::class,
+                ]);
+            }
+
             return redirect()->route('bill-payments.index')->with('success', 'Bill payment updated successfully!');
         } catch (\Exception $e) {
             Log::error('Error updating bill payment: '.$e->getMessage());
@@ -126,6 +187,26 @@ class BillPaymentController extends Controller
             $supplier = SupplierMaster::where('supplier_name', $billPayment->supplier_name)->first();
             if ($supplier) {
                 $supplier->update(['due_balance' => $supplier->due_balance + $billPayment->paid_amount]);
+            }
+
+            // Restore account balance (add back paid amount) and create log entry
+            $account = Account::where('account_number', $billPayment->account_master)->first();
+            if ($account) {
+                $newBalance = $account->balance_amount + $billPayment->paid_amount;
+                $account->update(['balance_amount' => $newBalance]);
+
+                // Create account log entry for the refund
+                AccountLog::create([
+                    'transaction_date' => now()->format('Y-m-d'),
+                    'account_id' => $account->id,
+                    'transaction_type' => 'Bill Payment (Deleted)',
+                    'description' => 'Refund: Payment to ' . $billPayment->supplier_name,
+                    'debit_amount' => 0,
+                    'credit_amount' => $billPayment->paid_amount,
+                    'balance_after' => $newBalance,
+                    'reference_id' => null,
+                    'reference_type' => null,
+                ]);
             }
 
             $billPayment->delete();

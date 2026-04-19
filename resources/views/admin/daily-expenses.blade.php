@@ -5,72 +5,79 @@
     <!-- Header -->
     <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100">
         <h1 class="text-xl text-gray-800 tracking-tight font-normal">Daily Expenses</h1>
-        <button onclick="toggleForm()" class="bg-[#3eb27e] hover:bg-[#349c6d] text-white font-medium py-2 px-4 rounded text-sm transition-colors shadow-sm flex items-center gap-2">
+        <button onclick="openAddModal()" class="bg-[#3eb27e] hover:bg-[#349c6d] text-white font-medium py-2 px-4 rounded text-sm transition-colors shadow-sm flex items-center gap-2">
             <i data-lucide="plus" class="w-4 h-4"></i>
             Add Expense
         </button>
     </div>
 
-    <!-- Form (Hidden by default) -->
-    <div id="expenseForm" class="hidden p-6 border-b border-gray-100">
-        <form action="{{ route('daily-expenses.store') }}" method="POST" class="max-w-3xl space-y-6">
-            @csrf
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Date -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-medium text-gray-700">Date <span class="text-red-500">*</span></label>
-                    <input type="date" name="expense_date" value="{{ date('Y-m-d') }}" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700">
-                </div>
-
-                <!-- Account Master -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-medium text-gray-700">Account Master <span class="text-red-500">*</span></label>
-                    <select name="account_id" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 bg-white">
-                        <option value="">-Select-</option>
-                        @foreach($accounts as $account)
-                            <option value="{{ $account->id }}">{{ $account->account_number }} - {{ $account->description }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <!-- Expense Details -->
-            <div class="flex flex-col gap-2">
-                <label class="text-sm font-medium text-gray-700">Expense Details <span class="text-red-500">*</span></label>
-                <textarea name="expense_details" rows="3" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 placeholder-gray-300" placeholder="Enter Expense Details"></textarea>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Expense Amount -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-medium text-gray-700">Expense Amount <span class="text-red-500">*</span></label>
-                    <input type="number" step="0.01" name="expense_amount" class="w-full border border-gray-200 rounded px-3 py-2 text-sm text-right focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 placeholder-gray-300" placeholder="0.00">
-                </div>
-
-                <!-- Expense By -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-medium text-gray-700">Expense By</label>
-                    <input type="text" name="expense_by" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 placeholder-gray-300" placeholder="Person Name">
-                </div>
-
-                <!-- Voucher No/Other Docs -->
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm font-medium text-gray-700">Voucher No / Other Docs</label>
-                    <input type="text" name="voucher_no" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 placeholder-gray-300" placeholder="Voucher #">
-                </div>
-            </div>
-
-            <div class="mt-8 pt-4 border-t border-gray-50 flex gap-3">
-                <button type="submit" class="bg-[#3eb27e] hover:bg-[#349c6d] text-white font-medium py-2 px-6 rounded text-sm transition-colors shadow-sm">
-                    Submit
-                </button>
-                <button type="button" onclick="toggleForm()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-6 rounded text-sm transition-colors">
-                    Cancel
+    <!-- Add Expense Modal -->
+    <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+                <h2 class="text-lg font-medium text-gray-800">Add Expense</h2>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
+            <form action="{{ route('daily-expenses.store') }}" method="POST" class="p-6 space-y-6">
+                @csrf
 
-        </form>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Date -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-medium text-gray-700">Date <span class="text-red-500">*</span></label>
+                        <input type="date" name="expense_date" value="{{ date('Y-m-d') }}" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700">
+                    </div>
+
+                    <!-- Account Master -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-medium text-gray-700">Account Master <span class="text-red-500">*</span></label>
+                        <select name="account_id" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 bg-white">
+                            <option value="">-Select-</option>
+                            @foreach($accounts as $account)
+                                <option value="{{ $account->id }}">{{ $account->account_number }} - {{ $account->description }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Expense Details -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium text-gray-700">Expense Details <span class="text-red-500">*</span></label>
+                    <textarea name="expense_details" rows="3" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 placeholder-gray-300" placeholder="Enter Expense Details"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Expense Amount -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-medium text-gray-700">Expense Amount <span class="text-red-500">*</span></label>
+                        <input type="number" step="0.01" name="expense_amount" class="w-full border border-gray-200 rounded px-3 py-2 text-sm text-right focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 placeholder-gray-300" placeholder="0.00">
+                    </div>
+
+                    <!-- Expense By -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-medium text-gray-700">Expense By</label>
+                        <input type="text" name="expense_by" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 placeholder-gray-300" placeholder="Person Name">
+                    </div>
+
+                    <!-- Voucher No/Other Docs -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-medium text-gray-700">Voucher No / Other Docs</label>
+                        <input type="text" name="voucher_no" class="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 text-gray-700 placeholder-gray-300" placeholder="Voucher #">
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-4 border-t border-gray-50 flex gap-3">
+                    <button type="submit" class="bg-[#3eb27e] hover:bg-[#349c6d] text-white font-medium py-2 px-6 rounded text-sm transition-colors shadow-sm">
+                        Submit
+                    </button>
+                    <button type="button" onclick="closeAddModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-6 rounded text-sm transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Expenses Table -->
@@ -192,10 +199,21 @@
 </div>
 
 <script>
-    function toggleForm() {
-        const form = document.getElementById('expenseForm');
-        form.classList.toggle('hidden');
+    function openAddModal() {
+        document.getElementById('addModal').classList.remove('hidden');
+        lucide.createIcons();
     }
+
+    function closeAddModal() {
+        document.getElementById('addModal').classList.add('hidden');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('addModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeAddModal();
+        }
+    });
 
     function openEditModal(id, date, accountId, details, amount, expenseBy, voucherNo) {
         document.getElementById('editForm').action = '/daily-expenses/' + id;

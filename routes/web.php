@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountLogController;
 use App\Http\Controllers\AccountMasterController;
 use App\Http\Controllers\BillPaymentController;
 use App\Http\Controllers\BudgetPlanController;
@@ -44,6 +45,9 @@ Route::post('/account-masters', [AccountMasterController::class, 'store'])->name
 Route::get('/account-masters/{account}/edit', [AccountMasterController::class, 'edit'])->name('account-masters.edit');
 Route::put('/account-masters/{account}', [AccountMasterController::class, 'update'])->name('account-masters.update');
 Route::delete('/account-masters/{account}', [AccountMasterController::class, 'destroy'])->name('account-masters.destroy');
+
+Route::get('/account-logs', [AccountLogController::class, 'index'])->name('account-logs.index');
+Route::post('/account-logs/rebuild', [AccountLogController::class, 'rebuild'])->name('account-logs.rebuild');
 
 // Debug route to test store
 Route::post('/debug-store', function (Request $request) {

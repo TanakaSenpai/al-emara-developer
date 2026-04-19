@@ -5,7 +5,7 @@
     <!-- Header -->
     <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100">
         <h1 class="text-xl text-gray-800 tracking-tight font-normal">Partner Master</h1>
-        <button onclick="toggleForm()" class="bg-[#3eb27e] hover:bg-[#349c6d] text-white font-medium py-2 px-4 rounded text-sm transition-colors shadow-sm flex items-center gap-2">
+        <button onclick="openAddModal()" class="bg-[#3eb27e] hover:bg-[#349c6d] text-white font-medium py-2 px-4 rounded text-sm transition-colors shadow-sm flex items-center gap-2">
             <i data-lucide="plus" class="w-4 h-4"></i>
             Add Partner
         </button>
@@ -68,9 +68,16 @@
         </div>
     @endif
 
-    <!-- Form (Hidden by default) -->
-    <div id="partnerForm" class="hidden p-6 border-b border-gray-100">
-        <form action="{{ route('partner-master.store') }}" method="POST" class="max-w-3xl space-y-6">
+    <!-- Add Partner Modal -->
+    <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+                <h2 class="text-lg font-medium text-gray-800">Add Partner</h2>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form action="{{ route('partner-master.store') }}" method="POST" class="p-6 space-y-6">
             @csrf
 
             <div class="flex flex-col md:flex-row md:items-start md:pt-2 gap-4">
@@ -129,16 +136,17 @@
                 <button type="submit" class="bg-[#3eb27e] hover:bg-[#349c6d] text-white font-medium py-2 px-6 rounded text-sm transition-colors shadow-sm">
                     Submit
                 </button>
-                <button type="button" onclick="toggleForm()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-6 rounded text-sm transition-colors">
+                <button type="button" onclick="closeAddModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-6 rounded text-sm transition-colors">
                     Cancel
                 </button>
             </div>
 
         </form>
     </div>
+</div>
 
-    <!-- Partners Table -->
-    <div class="overflow-x-auto">
+<!-- Partners Table -->
+<div class="overflow-x-auto">
         <table class="w-full text-sm text-left">
             <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
                 <tr>
@@ -265,10 +273,21 @@
 </div>
 
 <script>
-    function toggleForm() {
-        const form = document.getElementById('partnerForm');
-        form.classList.toggle('hidden');
+    function openAddModal() {
+        document.getElementById('addModal').classList.remove('hidden');
+        lucide.createIcons();
     }
+
+    function closeAddModal() {
+        document.getElementById('addModal').classList.add('hidden');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('addModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeAddModal();
+        }
+    });
 
     function openEditModal(id, partnerName, mobile, address, totalCharges, paidAmount, dueAmount, extraAmount, notes) {
         document.getElementById('editForm').action = '/partner-master/' + id;

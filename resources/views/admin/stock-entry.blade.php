@@ -5,15 +5,22 @@
     <!-- Header -->
     <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100">
         <h1 class="text-xl text-gray-800 tracking-tight font-normal">Stock Entry</h1>
-        <button onclick="toggleForm()" class="bg-[#3eb27e] hover:bg-[#349c6d] text-white font-medium py-2 px-4 rounded text-sm transition-colors shadow-sm flex items-center gap-2">
+        <button onclick="openAddModal()" class="bg-[#3eb27e] hover:bg-[#349c6d] text-white font-medium py-2 px-4 rounded text-sm transition-colors shadow-sm flex items-center gap-2">
             <i data-lucide="plus" class="w-4 h-4"></i>
             Add Stock Entry
         </button>
     </div>
 
-    <!-- Form (Hidden by default) -->
-    <div id="stockForm" class="hidden pb-20">
-        <form action="{{ route('stock-entry.store') }}" method="POST" class="max-w-6xl space-y-8 p-6">
+    <!-- Add Stock Entry Modal -->
+    <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+                <h2 class="text-lg font-medium text-gray-800">Add Stock Entry</h2>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form action="{{ route('stock-entry.store') }}" method="POST" class="p-6 space-y-8">
             @csrf
 
             <!-- Top Section -->
@@ -137,16 +144,17 @@
                 <button type="submit" class="bg-[#3eb27e] hover:bg-[#349c6d] text-white font-medium py-2 px-6 rounded text-sm transition-colors shadow-sm">
                     Submit
                 </button>
-                <button type="button" onclick="toggleForm()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-6 rounded text-sm transition-colors">
+                <button type="button" onclick="closeAddModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-6 rounded text-sm transition-colors">
                     Cancel
                 </button>
             </div>
 
         </form>
     </div>
+</div>
 
-    <!-- Stock Entries Table -->
-    <div class="overflow-x-auto">
+<!-- Stock Entries Table -->
+<div class="overflow-x-auto">
         <table class="w-full text-sm text-left">
             <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
                 <tr>
@@ -318,10 +326,21 @@
     const stockEntriesData = @json($stockEntries->load('details'));
     const itemsData = @json($items);
 
-    function toggleForm() {
-        const form = document.getElementById('stockForm');
-        form.classList.toggle('hidden');
+    function openAddModal() {
+        document.getElementById('addModal').classList.remove('hidden');
+        lucide.createIcons();
     }
+
+    function closeAddModal() {
+        document.getElementById('addModal').classList.add('hidden');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('addModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeAddModal();
+        }
+    });
 
     function openEditModal(entryId) {
         const entry = stockEntriesData.find(e => e.id === entryId);
