@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\AccountLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -36,6 +37,21 @@ class AccountMasterController extends Controller
         try {
             $account = Account::create($validated);
             Log::info('Account created', ['id' => $account->id]);
+
+            // Create account log entry for the initial balance
+            if ($validated['balance_amount'] > 0) {
+                AccountLog::create([
+                    'transaction_date' => now()->format('Y-m-d'),
+                    'account_id' => $account->id,
+                    'transaction_type' => 'Opening Balance',
+                    'description' => 'Initial balance for account ' . $account->account_number,
+                    'debit_amount' => 0,
+                    'credit_amount' => $validated['balance_amount'],
+                    'balance_after' => $validated['balance_amount'],
+                    'reference_id' => $account->id,
+                    'reference_type' => Account::class,
+                ]);
+            }
         } catch (\Exception $e) {
             Log::error('Error creating account: '.$e->getMessage());
 

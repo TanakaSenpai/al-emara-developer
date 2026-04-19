@@ -56,6 +56,14 @@ class StockEntryController extends Controller
                 'notes' => $request->notes,
             ]);
 
+            // Update supplier's due balance (increase - now owes this amount)
+            $supplier = SupplierMaster::where('supplier_name', $request->supplier_master)->first();
+            if ($supplier) {
+                $supplier->update([
+                    'due_balance' => $supplier->due_balance + $request->sub_total
+                ]);
+            }
+
             // Create stock entry details
             foreach ($request->item_master as $index => $itemMaster) {
                 $qnty = $request->qnty[$index];
@@ -118,6 +126,14 @@ class StockEntryController extends Controller
         ]);
 
         try {
+            // Revert old supplier's due balance (subtract old sub_total)
+            $oldSupplier = SupplierMaster::where('supplier_name', $stockEntry->supplier_master)->first();
+            if ($oldSupplier) {
+                $oldSupplier->update([
+                    'due_balance' => $oldSupplier->due_balance - $stockEntry->sub_total
+                ]);
+            }
+
             // Revert old stock changes first
             foreach ($stockEntry->details as $detail) {
                 $item = ItemMaster::where('item_name', $detail->item_master)->first();
@@ -166,6 +182,14 @@ class StockEntryController extends Controller
                 }
             }
 
+            // Update new supplier's due balance (increase - now owes this amount)
+            $newSupplier = SupplierMaster::where('supplier_name', $request->supplier_master)->first();
+            if ($newSupplier) {
+                $newSupplier->update([
+                    'due_balance' => $newSupplier->due_balance + $request->sub_total
+                ]);
+            }
+
             return redirect()->route('stock-entry.index')->with('success', 'Stock entry updated successfully!');
         } catch (\Exception $e) {
             Log::error('Error updating stock entry: '.$e->getMessage());
@@ -177,6 +201,14 @@ class StockEntryController extends Controller
     public function destroy(StockEntry $stockEntry)
     {
         try {
+            // Revert supplier's due balance (subtract the sub_total - debt cleared)
+            $supplier = SupplierMaster::where('supplier_name', $stockEntry->supplier_master)->first();
+            if ($supplier) {
+                $supplier->update([
+                    'due_balance' => $supplier->due_balance - $stockEntry->sub_total
+                ]);
+            }
+
             // Revert stock changes before deleting
             foreach ($stockEntry->details as $detail) {
                 $item = ItemMaster::where('item_name', $detail->item_master)->first();
